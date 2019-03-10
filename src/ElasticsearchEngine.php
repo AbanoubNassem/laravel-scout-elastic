@@ -11,13 +11,6 @@ use Illuminate\Support\Collection as BaseCollection;
 class ElasticsearchEngine extends Engine
 {
     /**
-     * Index where the models will be saved.
-     *
-     * @var string
-     */
-    protected $index;
-    
-    /**
      * Elastic where the instance of Elastic|\Elasticsearch\Client is stored.
      *
      * @var object
@@ -30,10 +23,9 @@ class ElasticsearchEngine extends Engine
      * @param  \Elasticsearch\Client  $elastic
      * @return void
      */
-    public function __construct(Elastic $elastic, $index)
+    public function __construct(Elastic $elastic)
     {
         $this->elastic = $elastic;
-        $this->index = $index;
     }
 
     /**
@@ -50,8 +42,8 @@ class ElasticsearchEngine extends Engine
             $params['body'][] = [
                 'update' => [
                     '_id' => $model->getKey(),
-                    '_index' => $this->index,
-                    '_type' => $model->searchableAs(),
+                    '_index' => $model->searchableAs(),
+                    '_type' => class_basename($model),
                 ]
             ];
             $params['body'][] = [
@@ -77,8 +69,8 @@ class ElasticsearchEngine extends Engine
             $params['body'][] = [
                 'delete' => [
                     '_id' => $model->getKey(),
-                    '_index' => $this->index,
-                    '_type' => $model->searchableAs(),
+                    '_index' => $model->searchableAs(),
+                    '_type' => class_basename($model),
                 ]
             ];
         });
@@ -131,8 +123,8 @@ class ElasticsearchEngine extends Engine
     protected function performSearch(Builder $builder, array $options = [])
     {
         $params = [
-            'index' => $this->index,
-            'type' => $builder->index ?: $builder->model->searchableAs(),
+            'index' => $builder->model->searchableAs(),
+            'type' => class_basename($builder->model),
             'body' => [
                 'query' => [
                     'bool' => [
